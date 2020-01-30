@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout
+    android:id="@+id/drawerlayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ffffffff"
+        android:orientation="vertical">
+        <androidx.appcompat.widget.Toolbar
+            app:title="  "
+            android:id="@+id/toolbar_mainwindow"
+            android:background="#ffffffff"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"/>
+
+        <LinearLayout
+            android:id="@+id/mainlayout"
+            android:layout_below="@id/toolbar_mainwindow"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+<!--            <TextView-->
+<!--                android:layout_weight="2"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"/>-->
+<!--            <TextView-->
+<!--                android:id="@+id/my"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="5"-->
+<!--                android:text="我的"-->
+<!--                android:textSize="15dp"-->
+<!--                android:textStyle="bold"-->
+<!--                android:gravity="center"/>-->
+<!--            <TextView-->
+<!--                android:id="@+id/find"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="5"-->
+<!--                android:text="发现"-->
+<!--                android:textSize="13dp"-->
+<!--                android:gravity="center"/>-->
+<!--            <TextView-->
+<!--                android:id="@+id/cloudvillage"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="5"-->
+<!--                android:text="云村"-->
+<!--                android:textSize="13dp"-->
+<!--                android:gravity="center"/>-->
+<!--            <TextView-->
+<!--                android:id="@+id/video"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="5"-->
+<!--                android:text="视频"-->
+<!--                android:textSize="13dp"-->
+<!--                android:gravity="center"/>-->
+<!--            <TextView-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="2"/>-->
+            <LinearLayout
+                android:id="@+id/recent_play"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@drawable/linearlayout_water_selector"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:src="@drawable/recentplay"
+                    android:layout_gravity="center_vertical"
+                    android:layout_width="0dp"
+                    android:layout_weight="5"
+                    android:layout_height="wrap_content"/>
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+                <TextView
+                    android:text="最近播放"
+                    android:textSize="18dp"
+                    android:layout_width="0dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="10"
+                    android:layout_height="wrap_content"/>
+                
+            </LinearLayout>
+            
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:menu="@menu/menu_nav"
+        app:headerLayout="@layout/nav_header"/>
+
+</androidx.drawerlayout.widget.DrawerLayout>

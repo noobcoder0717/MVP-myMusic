@@ -28,7 +28,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="view.SearchResultActivity" />
         <activity android:name="view.PlayActivity" />
     </application>
 

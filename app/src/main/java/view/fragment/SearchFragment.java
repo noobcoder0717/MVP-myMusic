@@ -1,6 +1,5 @@
 package view.fragment;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -8,7 +7,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,16 +16,9 @@ import androidx.fragment.app.Fragment;
 
 import com.example.mvpmymusic.R;
 
-import java.util.concurrent.TimeUnit;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import retrofit2.converter.gson.GsonConverterFactory;
 import view.MainActivity;
-import view.SearchResultActivity;
 
 public class SearchFragment extends Fragment {
 
@@ -69,9 +60,14 @@ public class SearchFragment extends Fragment {
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                Intent intent=new Intent(getContext(), SearchResultActivity.class);
-                intent.putExtra("query",query);
-                startActivity(intent);
+//                Intent intent=new Intent(getContext(), SearchResultActivity.class);
+//                intent.putExtra("query",query);
+//                startActivity(intent);
+                MainActivity mainActivity=(MainActivity)getActivity();
+                SearchResultFragment srf=new SearchResultFragment(query);
+                mainActivity.setSearchResultFragment(srf);
+                mainActivity.addFragment(srf);
+                mainActivity.showFragment(mainActivity.getFRAGMENTNUMBERS());
                 return false;
             }
             @Override

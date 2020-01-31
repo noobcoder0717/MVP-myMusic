@@ -41,11 +41,18 @@ import service.PlayService;
 import view.fragment.MainFragment;
 import view.fragment.RecentPlayFragment;
 import view.fragment.SearchFragment;
+import view.fragment.SearchResultFragment;
 
 public class MainActivity extends AppCompatActivity  {
     private MainFragment mainFragment;
     private SearchFragment searchFragment;
     private RecentPlayFragment recentPlayFragment;
+    private SearchResultFragment searchResultFragment;
+
+    public void setSearchResultFragment(SearchResultFragment searchResultFragment) {
+        this.searchResultFragment = searchResultFragment;
+    }
+
     private int FRAGMENTNUMBERS=0;
     private List<Fragment> fragmentList=new ArrayList<>();//管理当前的Fragment
 

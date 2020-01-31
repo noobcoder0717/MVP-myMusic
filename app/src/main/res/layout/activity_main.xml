@@ -66,7 +66,7 @@
             android:layout_height="wrap_content"/>
 
         <ImageView
-            android:id="@+id/nextsong"
+            android:id="@+id/play_pause_main"
             android:src="@drawable/play"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"

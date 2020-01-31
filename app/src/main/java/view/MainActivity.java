@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -57,6 +58,9 @@ public class MainActivity extends AppCompatActivity  {
     @Bind(R.id.albumimage_main)
     ImageView albumimage_main;
 
+    @Bind(R.id.play_pause_main)
+    ImageView play_pause;
+
     @Bind(R.id.statuslayout_main)
     RelativeLayout statusLayout;
 
@@ -90,44 +94,16 @@ public class MainActivity extends AppCompatActivity  {
         bindService(intent,connection, Context.BIND_AUTO_CREATE);
         ButterKnife.bind(this);
 
+
         statusLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(MainActivity.this, PlayActivity.class);
                 if(Currsong.STATUS!=Constant.NOTPLAYING) {
-                    switch (Currsong.STATUS) {
-                        case Constant.STATUS_PLAYINGONLINESONG:
-                            intent.putExtra("songname",Currsong.getCurrSaveSong().getSongName());
-                            intent.putExtra("singernames",getSingerNames(Currsong.getCurrSaveSong()));
-                            intent.putExtra("STATUS",Currsong.STATUS);
-                            startActivity(intent);
-                            break;
-                        case Constant.STATUS_PLAYINGRECENTSONG:
-                            intent.putExtra("songname",Currsong.getCurrRecentSong().getSongName());
-                            intent.putExtra("singernames",getSingerNames(Currsong.getCurrRecentSong()));
-                            intent.putExtra("STATUS",Currsong.STATUS);
-                            startActivity(intent);
-                            break;
-                    }
+                    startActivity(intent);
                 }
             }
         });
-
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                while(true){
-//                    try{
-//                        Thread.sleep(500);
-//                        refresh();
-//                    }catch (Exception e){
-//                        Log.i("MainActivity",e.getMessage());
-//                    }
-//                }
-//            }
-//        });
-
-
     }
 
     //将fragment添加到fragment回退栈和list中
@@ -175,10 +151,7 @@ public class MainActivity extends AppCompatActivity  {
     }
     public RecentPlayFragment getRecentPlayFragment(){return recentPlayFragment;}
     public int getFRAGMENTNUMBERS(){return FRAGMENTNUMBERS;}
-//    @Override
-//    public void onSelectedFragment(BaseFragment baseFragment){
-//        this.baseFragment=baseFragment;
-//    }
+
 
     @Override
     public void onBackPressed(){
@@ -198,29 +171,13 @@ public class MainActivity extends AppCompatActivity  {
     }
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPlayingStatusEvent(PlayingStatusEvent event){
-        if(Currsong.STATUS==Constant.STATUS_PLAYINGONLINESONG){
-            songname_main.setText(Currsong.getCurrSaveSong().getSongName());
-            singername_main.setText(getSingerNames(Currsong.getCurrSaveSong()));
-            Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrSaveSong().getAlbummid()+".jpg").into(albumimage_main);
-        }else if(Currsong.STATUS==Constant.STATUS_PLAYINGRECENTSONG){
-            songname_main.setText(Currsong.getCurrRecentSong().getSongName());
-            singername_main.setText(getSingerNames(Currsong.getCurrRecentSong()));
-            Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrRecentSong().getAlbummid()+".jpg").into(albumimage_main);
-        }
+        refresh();
     }
     @Override
     protected void onResume(){
         super.onResume();
         Log.i("MainActivity","onResume");
-        if(Currsong.STATUS==Constant.STATUS_PLAYINGONLINESONG){
-            songname_main.setText(Currsong.getCurrSaveSong().getSongName());
-            singername_main.setText(getSingerNames(Currsong.getCurrSaveSong()));
-            Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrSaveSong().getAlbummid()+".jpg").into(albumimage_main);
-        }else if(Currsong.STATUS==Constant.STATUS_PLAYINGRECENTSONG){
-            songname_main.setText(Currsong.getCurrRecentSong().getSongName());
-            singername_main.setText(getSingerNames(Currsong.getCurrRecentSong()));
-            Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrRecentSong().getAlbummid()+".jpg").into(albumimage_main);
-        }
+        refresh();
     }
 
     @Override
@@ -251,14 +208,31 @@ public class MainActivity extends AppCompatActivity  {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void refresh(){
-        if(Currsong.STATUS==Constant.STATUS_PLAYINGONLINESONG){
-            songname_main.setText(Currsong.getCurrSaveSong().getSongName());
-            singername_main.setText(getSingerNames(Currsong.getCurrSaveSong()));
-            Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrSaveSong().getAlbummid()+".jpg").into(albumimage_main);
-        }else if(Currsong.STATUS==Constant.STATUS_PLAYINGRECENTSONG){
-            songname_main.setText(Currsong.getCurrRecentSong().getSongName());
-            singername_main.setText(getSingerNames(Currsong.getCurrRecentSong()));
-            Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrRecentSong().getAlbummid()+".jpg").into(albumimage_main);
+        switch(Currsong.getSTATUS()){
+            case Constant.STATUS_PLAYINGONLINESONG:
+                play_pause.setImageResource(R.drawable.pause);
+                songname_main.setText(Currsong.getCurrSaveSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrSaveSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrSaveSong().getAlbummid()+".jpg").into(albumimage_main);
+                break;
+            case Constant.STATUS_PAUSEONLINESONG:
+                play_pause.setImageResource(R.drawable.play);
+                songname_main.setText(Currsong.getCurrSaveSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrSaveSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrSaveSong().getAlbummid()+".jpg").into(albumimage_main);
+                break;
+            case Constant.STATUS_PLAYINGRECENTSONG:
+                play_pause.setImageResource(R.drawable.pause);
+                songname_main.setText(Currsong.getCurrRecentSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrRecentSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrRecentSong().getAlbummid()+".jpg").into(albumimage_main);
+                break;
+            case Constant.STATUS_PAUSERECENTSONG:
+                play_pause.setImageResource(R.drawable.play);
+                songname_main.setText(Currsong.getCurrRecentSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrRecentSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrRecentSong().getAlbummid()+".jpg").into(albumimage_main);
+                break;
         }
     }
 }

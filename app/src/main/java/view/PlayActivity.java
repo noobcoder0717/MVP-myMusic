@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -18,6 +20,9 @@ import com.example.mvpmymusic.R;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 import Util.Constant;
 import Util.Currsong;
@@ -31,6 +36,8 @@ import service.PlayService;
 public class PlayActivity extends AppCompatActivity implements IPlayView{
 
     private PlayService.PlayBinder playBinder;
+    MediaPlayer mp=new MediaPlayer();
+    Thread seekbarThread;
 
     @Bind(R.id.songname_activityplay)
     TextView songname;
@@ -52,6 +59,7 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
         ButterKnife.bind(this);
+        EventBus.getDefault().register(this);
 
         Intent intent = new Intent(PlayActivity.this,PlayService.class);
         bindService(intent,connection, Context.BIND_AUTO_CREATE);
@@ -94,20 +102,19 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
             case Constant.STATUS_PLAYINGONLINESONG:
                 songname.setText(Currsong.getCurrSaveSong().getSongName());
                 singername.setText(getSingerNames(Currsong.getCurrSaveSong()));
-                seekBar.setMax(Currsong.getCurrSaveSong().getInterval());
                 songLength.setText(MinuteAndSecond(Currsong.getCurrSaveSong().getInterval()));
                 break;
             case Constant.STATUS_PLAYINGRECENTSONG:
                 songname.setText(Currsong.getCurrRecentSong().getSongName());
                 singername.setText(getSingerNames(Currsong.getCurrRecentSong()));
-                seekBar.setMax(Currsong.getCurrRecentSong().getInterval());
                 songLength.setText(MinuteAndSecond(Currsong.getCurrRecentSong().getInterval()));
                 break;
         }
-//        MediaPlayer mp=playBinder.getMp();
-//        Log.i("PlayActivity",mp.getDuration()+"");
-
-
+        if(Currsong.getSTATUS()!=Constant.NOTPLAYING){
+            mp=PlayService.mp;
+            seekBar.setMax(mp.getDuration());
+            getProgress();
+        }
     }
 
 
@@ -115,7 +122,7 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
     protected void onDestroy(){
         super.onDestroy();
         unbindService(connection);
-//        EventBus.getDefault().unregister(this);
+        EventBus.getDefault().unregister(this);
     }
 
     public String getSingerNames(SaveSong ss){
@@ -138,6 +145,7 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         return SingerNames;
     }
 
+    //输入歌曲的总秒数，返回xx：xx的格式（xx分xx秒）
     public String MinuteAndSecond(int interval){
         int minutes=interval/60;
         int seconds=interval%60;
@@ -152,9 +160,47 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         if(seconds<10){
             res+='0';
             res+=seconds;
+        }else{
+            res+=seconds;
         }
         return res;
-
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void refreshUI(PlayingStatusEvent event) {
+        init();
+        getProgress();
+    }
+
+
+
+
+
+    public void getProgress(){
+        seekbarThread=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (Currsong.getSTATUS() == Constant.STATUS_PLAYINGONLINESONG || Currsong.getSTATUS() == Constant.STATUS_PLAYINGRECENTSONG) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    handler.sendEmptyMessage(0);
+                }
+            }
+        });
+        seekbarThread.start();
+    }
+
+
+
+    private Handler handler=new Handler(){
+        @Override
+        public void handleMessage(Message message){//更新UI，当前播放时间
+            currentProgress.setText(MinuteAndSecond(mp.getCurrentPosition()/1000));
+            seekBar.setProgress(mp.getCurrentPosition());
+        }
+    };
 
 }

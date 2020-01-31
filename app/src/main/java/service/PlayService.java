@@ -30,7 +30,7 @@ public class PlayService extends Service {
     private int recentCurrentPosition;
 
 
-    private MediaPlayer mp = new MediaPlayer();
+    public static MediaPlayer mp = new MediaPlayer();
 
 
     private PlayBinder playBinder=new PlayBinder();
@@ -71,6 +71,14 @@ public class PlayService extends Service {
         mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
+                if(Currsong.getSTATUS()==Constant.STATUS_PREPAREONLINESONG) {
+                    Currsong.setSTATUS(Constant.STATUS_PLAYINGONLINESONG);
+                    EventBus.getDefault().post(new PlayingStatusEvent(Currsong.getCurrSaveSong()));
+                }
+                if(Currsong.getSTATUS()==Constant.STATUS_PREPARERECENTSONG) {
+                    Currsong.setSTATUS(Constant.STATUS_PLAYINGRECENTSONG);
+                    EventBus.getDefault().post(new PlayingStatusEvent(Currsong.getCurrRecentSong()));
+                }
                 mp.start();
                 Log.i("PlayActivity",mp.getDuration()+"");
             }
@@ -86,7 +94,8 @@ public class PlayService extends Service {
     }
 
     public class PlayBinder extends Binder {
-        public MediaPlayer getMp() {
+        public MediaPlayer getMediaPlayer() {
+            Log.i("PlayActivity",mp.getDuration()+"");
             return mp;
         }
 
@@ -95,15 +104,13 @@ public class PlayService extends Service {
             if(!saveSong.isNeedPay()){
                 try{
                     Currsong.setCurrSaveSong(saveSong);
-                    Currsong.setSTATUS(Constant.STATUS_PLAYINGONLINESONG);
+                    Currsong.setSTATUS(Constant.STATUS_PREPAREONLINESONG);
                     onlineCurrentPosition=saveSong.getPosition();
                     mp.reset();//reset不能在release之后调用。
                     mp.setDataSource(saveSong.getUrl());
                     mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
                     mp.prepareAsync();
                     Log.i("PlayService",saveSong.getUrl());
-
-                    EventBus.getDefault().post(new PlayingStatusEvent(saveSong));
                 }catch (IOException e){
                     Log.i("PlayService",e.getMessage());
                 }
@@ -119,7 +126,7 @@ public class PlayService extends Service {
             try{
                 Log.i("PlayActivity",mp.toString());
                 Currsong.setCurrRecentSong(recentSong);
-                Currsong.setSTATUS(Constant.STATUS_PLAYINGRECENTSONG);
+                Currsong.setSTATUS(Constant.STATUS_PREPARERECENTSONG);
                 recentCurrentPosition=recentSong.getPosition();
                 mp.reset();//reset不能在release之后调用。
                 mp.setDataSource(recentSong.getUrl());

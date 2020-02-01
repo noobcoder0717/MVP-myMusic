@@ -76,7 +76,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> {
                 singer+="/";
         }
         viewHolder.songname.setText(song);
-        viewHolder.singer_album.setText(singer+"---"+album);
+        viewHolder.singer_album.setText(singer+" - "+album);
         viewHolder.songView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -9,7 +9,6 @@
         android:id="@+id/icon_image"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:src="@drawable/header"
         android:layout_centerInParent="true"/>
 
     <TextView

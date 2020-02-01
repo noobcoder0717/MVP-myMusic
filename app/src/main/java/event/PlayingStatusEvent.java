@@ -34,6 +34,7 @@ public class PlayingStatusEvent {
     public PlayingStatusEvent(RecentSong rs){
         this.rs=rs;
     }
+    public PlayingStatusEvent(){ss=null; rs=null;}
 
     public SaveSong getSaveSong() {
         return ss;

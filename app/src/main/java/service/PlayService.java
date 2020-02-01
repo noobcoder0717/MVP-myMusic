@@ -86,7 +86,7 @@ public class PlayService extends Service {
         mp.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
-                Log.i("PlayService","onError");
+                Log.i("PlayService","onError:what "+what+" extra "+extra);
                 return true;
             }
         });
@@ -132,7 +132,7 @@ public class PlayService extends Service {
                 mp.setDataSource(recentSong.getUrl());
                 mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 mp.prepareAsync();
-                EventBus.getDefault().post(new PlayingStatusEvent(recentSong));
+                Log.i("PlayService",recentCurrentPosition+"/"+LitePal.findAll(RecentSong.class).size()+"");
             }catch (IOException e){
                 Log.i("PlayService",e.getMessage());
             }

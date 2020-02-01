@@ -67,7 +67,7 @@
 
         <ImageView
             android:id="@+id/play_pause_main"
-            android:src="@drawable/play"
+            android:src="@drawable/play_32"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="10dp"

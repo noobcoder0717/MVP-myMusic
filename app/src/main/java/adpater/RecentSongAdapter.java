@@ -59,7 +59,7 @@ public class RecentSongAdapter extends RecyclerView.Adapter<RecentSongAdapter.Vi
                 singer+='/';
         }
         viewHolder.songname.setText(song.getSongName());
-        viewHolder.singer_album.setText(singer+"---"+album);
+        viewHolder.singer_album.setText(singer+" - "+album);
         viewHolder.songView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

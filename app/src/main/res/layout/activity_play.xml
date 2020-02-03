@@ -55,7 +55,17 @@
 
     </RelativeLayout>
 
+
+    <Button
+        android:id="@+id/love"
+        android:background="@drawable/love"
+        android:layout_above="@id/seekbar_layout"
+        android:layout_width="32dp"
+        android:layout_height="32dp"/>
+
+
     <LinearLayout
+        android:id="@+id/seekbar_layout"
         android:layout_above="@id/button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

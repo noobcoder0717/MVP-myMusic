@@ -71,10 +71,10 @@ public class RecentPlayFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-//        EventBus.getDefault().register(this);
         Intent playIntent = new Intent(getActivity(),PlayService.class);
         getActivity().bindService(playIntent,playConnection, Context.BIND_AUTO_CREATE);
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View view=inflater.inflate(R.layout.fragment_recentplay,container,false);

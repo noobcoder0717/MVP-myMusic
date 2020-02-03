@@ -59,6 +59,8 @@ public class MainFragment extends Fragment {
     @Bind(R.id.recent_play)
     LinearLayout recentPlay;
 
+    @Bind(R.id.love_list)
+    LinearLayout lovelist;
 
 
     public interface OnClick{
@@ -86,6 +88,17 @@ public class MainFragment extends Fragment {
                 RecentPlayFragment rpf=new RecentPlayFragment();
                 activity1.setRecentPlayFragment(rpf);
                 activity1.addFragment(rpf);
+                activity1.showFragment(activity1.getFRAGMENTNUMBERS());
+            }
+        });
+
+        lovelist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity activity1=(MainActivity)getActivity();
+                LoveSongFragment lsf=new LoveSongFragment();
+                activity1.setLoveSongFragment(lsf);
+                activity1.addFragment(lsf);
                 activity1.showFragment(activity1.getFRAGMENTNUMBERS());
             }
         });

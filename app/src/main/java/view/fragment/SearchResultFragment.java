@@ -32,6 +32,7 @@ import java.util.List;
 
 import adpater.SingerAdapter;
 import adpater.SongAdapter;
+import bean.OnlineSong;
 import bean.SaveSong;
 import bean.SongUrlSorted;
 import butterknife.Bind;
@@ -178,8 +179,24 @@ public class SearchResultFragment extends Fragment implements ISearchResultView 
         songAdapter.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onClick(int position) {//点击播放歌曲
-                SaveSong ss = saveSongList.get(position);
-                playBinder.play(ss);
+                LitePal.deleteAll(OnlineSong.class);
+                for(int i=0;i<songnameList.size();i++){
+                    OnlineSong os = new OnlineSong();
+                    os.setSingers(singerList.get(i));
+                    os.setDuration(songDuration.get(i));
+                    os.setSongmId(songmidList.get(i));
+                    os.setSongName(songnameList.get(i));
+                    os.setAlbumName(albumList.get(i));
+                    os.setUrl(songUrlList.get(i).getUrl());
+                    os.setAlbummid(albummidList.get(i));
+                    os.setPosition(i);
+                    os.setNeedPay(songUrlList.get(i).isNeedPay());
+                    os.setInterval(intervalList.get(i));
+                    os.save();
+                }
+                List<OnlineSong> onlineSongList=LitePal.findAll(OnlineSong.class);
+                OnlineSong os = onlineSongList.get(position);
+                playBinder.play(os);
             }
         });
 

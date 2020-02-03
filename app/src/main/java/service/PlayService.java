@@ -19,6 +19,8 @@ import java.util.List;
 
 import Util.Constant;
 import Util.Currsong;
+import bean.LoveSong;
+import bean.OnlineSong;
 import bean.RecentSong;
 import bean.SaveSong;
 import event.NeedPayEvent;
@@ -28,6 +30,7 @@ import model.ISearchResult;
 public class PlayService extends Service {
     private int onlineCurrentPosition;
     private int recentCurrentPosition;
+    private int loveCurrentPosition;
 
 
     public static MediaPlayer mp = new MediaPlayer();
@@ -60,9 +63,20 @@ public class PlayService extends Service {
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
-                Log.i("PlayService","oncompletion");
                 if(Currsong.getSTATUS()==Constant.STATUS_PLAYINGONLINESONG) {
-                    saveRecentSong(Currsong.getCurrSaveSong());
+                    saveRecentSong(Currsong.getCurrOnlineSong());
+                }
+                if(Currsong.getSTATUS()==Constant.STATUS_PLAYINGLOVESONG){
+                    try{
+                        LoveSong ls=new LoveSong();
+                        ls.setPlaying("no");
+                        ls.updateAll("url = ?",Currsong.getCurrLoveSong().getUrl());
+                        Log.i("PlayService",Currsong.getCurrLoveSong().getUrl());
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    Log.i("PlayService",Currsong.getCurrLoveSong().getSongName());
+                    saveRecentSong(Currsong.getCurrLoveSong());
                 }
                 playNextSong();
             }
@@ -73,11 +87,15 @@ public class PlayService extends Service {
             public void onPrepared(MediaPlayer mediaPlayer) {
                 if(Currsong.getSTATUS()==Constant.STATUS_PREPAREONLINESONG) {
                     Currsong.setSTATUS(Constant.STATUS_PLAYINGONLINESONG);
-                    EventBus.getDefault().post(new PlayingStatusEvent(Currsong.getCurrSaveSong()));
+                    EventBus.getDefault().post(new PlayingStatusEvent(Currsong.getCurrOnlineSong()));
                 }
                 if(Currsong.getSTATUS()==Constant.STATUS_PREPARERECENTSONG) {
                     Currsong.setSTATUS(Constant.STATUS_PLAYINGRECENTSONG);
                     EventBus.getDefault().post(new PlayingStatusEvent(Currsong.getCurrRecentSong()));
+                }
+                if(Currsong.getSTATUS()==Constant.STATUS_PREPARELOVESONG) {
+                    Currsong.setSTATUS(Constant.STATUS_PLAYINGLOVESONG);
+                    EventBus.getDefault().post(new PlayingStatusEvent(Currsong.getCurrLoveSong()));
                 }
                 mp.start();
                 Log.i("PlayActivity",mp.getDuration()+"");
@@ -100,17 +118,20 @@ public class PlayService extends Service {
         }
 
         //播放在线歌曲
-        public void play(SaveSong saveSong){
-            if(!saveSong.isNeedPay()){
+        public void play(OnlineSong onlineSong){
+            LoveSong ls=new LoveSong();
+            ls.setPlaying("no");
+            ls.updateAll("isPlaying = ?","yes");
+            if(!onlineSong.isNeedPay()){
                 try{
-                    Currsong.setCurrSaveSong(saveSong);
+                    Currsong.setCurrOnlineSong(onlineSong);
                     Currsong.setSTATUS(Constant.STATUS_PREPAREONLINESONG);
-                    onlineCurrentPosition=saveSong.getPosition();
+                    onlineCurrentPosition=onlineSong.getPosition();
                     mp.reset();//reset不能在release之后调用。
-                    mp.setDataSource(saveSong.getUrl());
+                    mp.setDataSource(onlineSong.getUrl());
                     mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
                     mp.prepareAsync();
-                    Log.i("PlayService",saveSong.getUrl());
+                    Log.i("PlayService",onlineSong.getUrl());
                 }catch (IOException e){
                     Log.i("PlayService",e.getMessage());
                 }
@@ -123,6 +144,9 @@ public class PlayService extends Service {
 
         //播放最近播放歌曲
         public void play(RecentSong recentSong){
+            LoveSong ls=new LoveSong();
+            ls.setPlaying("no");
+            ls.updateAll("isPlaying = ?","yes");
             try{
                 Log.i("PlayActivity",mp.toString());
                 Currsong.setCurrRecentSong(recentSong);
@@ -137,19 +161,42 @@ public class PlayService extends Service {
                 Log.i("PlayService",e.getMessage());
             }
         }
+
+        //播放收藏歌曲
+        public void play(LoveSong loveSong){
+            try{
+                Log.i("PlayActivity",mp.toString());
+
+                //修改歌曲状态
+                LoveSong ls=new LoveSong();
+                ls.setPlaying("yes");
+                ls.updateAll("url = ?",loveSong.getUrl());
+
+                Currsong.setCurrLoveSong(loveSong);
+                Currsong.setSTATUS(Constant.STATUS_PREPARELOVESONG);
+                loveCurrentPosition=loveSong.getPosition();
+                mp.reset();//reset不能在release之后调用。
+                mp.setDataSource(loveSong.getUrl());
+                mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mp.prepareAsync();
+                Log.i("PlayService",loveSong.getPosition()+"");
+            }catch (IOException e){
+                Log.i("PlayService",e.getMessage());
+            }
+        }
     }
 
     public void playNextSong() {
         switch(Currsong.getSTATUS()){
             case Constant.STATUS_PLAYINGONLINESONG:
-                List<SaveSong> SaveSongList = LitePal.findAll(SaveSong.class);
-                SaveSong ss;
-                if (onlineCurrentPosition == SaveSongList.size() - 1) {
-                    ss = SaveSongList.get(0);
-                    playBinder.play(ss);
+                List<OnlineSong> onlineSongList = LitePal.findAll(OnlineSong.class);
+                OnlineSong os;
+                if (onlineCurrentPosition == onlineSongList.size() - 1) {
+                    os = onlineSongList.get(0);
+                    playBinder.play(os);
                 } else {
-                    ss = SaveSongList.get(onlineCurrentPosition + 1);
-                    playBinder.play(ss);
+                    os = onlineSongList.get(onlineCurrentPosition + 1);
+                    playBinder.play(os);
                 }
                 break;
 
@@ -164,21 +211,34 @@ public class PlayService extends Service {
                     playBinder.play(rs);
                 }
                 break;
+
+            case Constant.STATUS_PLAYINGLOVESONG:
+                List<LoveSong> loveSongList=LitePal.findAll(LoveSong.class);
+                LoveSong ls;
+                if(loveCurrentPosition==loveSongList.size()-1){
+                    ls=loveSongList.get(0);
+                    playBinder.play(ls);
+                }else{
+                    ls=loveSongList.get(loveCurrentPosition+1);
+                    playBinder.play(ls);
+                }
+                Log.i("PlayService","play next love song");
+                break;
         }
     }
 
-    public void saveRecentSong(SaveSong ss){
+    public void saveRecentSong(OnlineSong os){
         Log.i("PlayService","saveRecentSong");
         List<RecentSong> songList=LitePal.findAll(RecentSong.class);
         RecentSong recentSong=new RecentSong();
-        recentSong.setAlbummid(ss.getAlbummid());
-        recentSong.setAlbumName(ss.getAlbumName());
-        recentSong.setNeedPay(ss.isNeedPay());
-        recentSong.setSingers(ss.getSingers());
-        recentSong.setSongName(ss.getSongName());
-        recentSong.setUrl(ss.getUrl());
-        recentSong.setSongmId(ss.getSongmId());
-        recentSong.setInterval(ss.getInterval());
+        recentSong.setAlbummid(os.getAlbummid());
+        recentSong.setAlbumName(os.getAlbumName());
+        recentSong.setNeedPay(os.isNeedPay());
+        recentSong.setSingers(os.getSingers());
+        recentSong.setSongName(os.getSongName());
+        recentSong.setUrl(os.getUrl());
+        recentSong.setSongmId(os.getSongmId());
+        recentSong.setInterval(os.getInterval());
         if(!AlreadyExist(recentSong)){
             Log.i("PlayService","song don't exist");
             recentSong.setPosition(songList.size());
@@ -189,6 +249,30 @@ public class PlayService extends Service {
 //
 //        }
     }
+    public void saveRecentSong(LoveSong ls){
+        Log.i("PlayService","saveRecentSong");
+        List<RecentSong> songList=LitePal.findAll(RecentSong.class);
+        RecentSong recentSong=new RecentSong();
+        recentSong.setAlbummid(ls.getAlbummid());
+        recentSong.setAlbumName(ls.getAlbumName());
+        recentSong.setNeedPay(ls.isNeedPay());
+        recentSong.setSingers(ls.getSingers());
+        recentSong.setSongName(ls.getSongName());
+        recentSong.setUrl(ls.getUrl());
+        recentSong.setSongmId(ls.getSongmId());
+        recentSong.setInterval(ls.getInterval());
+        if(!AlreadyExist(recentSong)){
+            Log.i("PlayService","song don't exist");
+            recentSong.setPosition(songList.size());
+            recentSong.save();
+        }
+        Log.i("PlayService",LitePal.findAll(RecentSong.class).size()+"");
+//        else{//如果这首歌已存在于最近播放列表中，则将其移至最近播放列表的最顶端
+//
+//        }
+    }
+
+
 
     public Boolean AlreadyExist(RecentSong recentSong){
         List<RecentSong> recentSongList=LitePal.findAll(RecentSong.class);

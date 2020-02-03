@@ -6,5 +6,7 @@
     <list>
         <mapping class="bean.SaveSong"/>
         <mapping class="bean.RecentSong"/>
+        <mapping class="bean.OnlineSong"/>
+        <mapping class="bean.LoveSong"/>
     </list>
 </litepal>

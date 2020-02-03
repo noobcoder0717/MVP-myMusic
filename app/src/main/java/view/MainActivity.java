@@ -24,6 +24,7 @@ import com.example.mvpmymusic.R;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +33,15 @@ import Util.Constant;
 import Util.Currsong;
 import Util.RetrofitFactory;
 import bean.ClientApi;
+import bean.LoveSong;
+import bean.OnlineSong;
 import bean.RecentSong;
 import bean.SaveSong;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import event.PlayingStatusEvent;
 import service.PlayService;
+import view.fragment.LoveSongFragment;
 import view.fragment.MainFragment;
 import view.fragment.RecentPlayFragment;
 import view.fragment.SearchFragment;
@@ -48,6 +52,15 @@ public class MainActivity extends AppCompatActivity  {
     private SearchFragment searchFragment;
     private RecentPlayFragment recentPlayFragment;
     private SearchResultFragment searchResultFragment;
+    private LoveSongFragment loveSongFragment;
+
+    public LoveSongFragment getLoveSongFragment() {
+        return loveSongFragment;
+    }
+
+    public void setLoveSongFragment(LoveSongFragment loveSongFragment) {
+        this.loveSongFragment = loveSongFragment;
+    }
 
     public void setSearchResultFragment(SearchResultFragment searchResultFragment) {
         this.searchResultFragment = searchResultFragment;
@@ -101,6 +114,10 @@ public class MainActivity extends AppCompatActivity  {
         bindService(intent,connection, Context.BIND_AUTO_CREATE);
         ButterKnife.bind(this);
 
+        //将所有喜爱歌曲的状态修改为非正在播放
+        LoveSong ls=new LoveSong();
+        ls.setPlaying("no");
+        ls.updateAll("isPlaying = ?","yes");
 
         statusLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -126,6 +143,11 @@ public class MainActivity extends AppCompatActivity  {
                         PlayService.mp.pause();
                         Currsong.setSTATUS(Constant.STATUS_PAUSERECENTSONG);
                         break;
+                    case Constant.STATUS_PLAYINGLOVESONG:
+                        play_pause.setImageResource(R.drawable.play_32);
+                        PlayService.mp.pause();
+                        Currsong.setSTATUS(Constant.STATUS_PAUSELOVESONG);
+                        break;
                     case Constant.STATUS_PAUSEONLINESONG:
                         play_pause.setImageResource(R.drawable.pause_32);
                         PlayService.mp.start();
@@ -135,6 +157,11 @@ public class MainActivity extends AppCompatActivity  {
                         play_pause.setImageResource(R.drawable.pause_32);
                         PlayService.mp.start();
                         Currsong.setSTATUS(Constant.STATUS_PLAYINGRECENTSONG);
+                        break;
+                    case Constant.STATUS_PAUSELOVESONG:
+                        play_pause.setImageResource(R.drawable.pause_32);
+                        PlayService.mp.start();
+                        Currsong.setSTATUS(Constant.STATUS_PLAYINGLOVESONG);
                         break;
                 }
             }
@@ -221,11 +248,11 @@ public class MainActivity extends AppCompatActivity  {
         unbindService(connection);
     }
 
-    public String getSingerNames(SaveSong ss){
+    public String getSingerNames(OnlineSong os){
         String SingerNames="";
-        for(int i=0;i<ss.getSingers().size();i++){
-            SingerNames+=ss.getSingers().get(i);
-            if(i!=ss.getSingers().size()-1)
+        for(int i=0;i<os.getSingers().size();i++){
+            SingerNames+=os.getSingers().get(i);
+            if(i!=os.getSingers().size()-1)
                 SingerNames+="/";
         }
         return SingerNames;
@@ -241,20 +268,30 @@ public class MainActivity extends AppCompatActivity  {
         return SingerNames;
     }
 
+    public String getSingerNames(LoveSong ls){
+        String SingerNames="";
+        for(int i=0;i<ls.getSingers().size();i++){
+            SingerNames+=ls.getSingers().get(i);
+            if(i!=ls.getSingers().size()-1)
+                SingerNames+="/";
+        }
+        return SingerNames;
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void refresh(){
         switch(Currsong.getSTATUS()){
             case Constant.STATUS_PLAYINGONLINESONG:
                 play_pause.setImageResource(R.drawable.pause_32);
-                songname_main.setText(Currsong.getCurrSaveSong().getSongName());
-                singername_main.setText(getSingerNames(Currsong.getCurrSaveSong()));
-                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrSaveSong().getAlbummid()+".jpg").into(albumimage_main);
+                songname_main.setText(Currsong.getCurrOnlineSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrOnlineSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrOnlineSong().getAlbummid()+".jpg").into(albumimage_main);
                 break;
             case Constant.STATUS_PAUSEONLINESONG:
                 play_pause.setImageResource(R.drawable.play_32);
-                songname_main.setText(Currsong.getCurrSaveSong().getSongName());
-                singername_main.setText(getSingerNames(Currsong.getCurrSaveSong()));
-                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrSaveSong().getAlbummid()+".jpg").into(albumimage_main);
+                songname_main.setText(Currsong.getCurrOnlineSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrOnlineSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrOnlineSong().getAlbummid()+".jpg").into(albumimage_main);
                 break;
             case Constant.STATUS_PLAYINGRECENTSONG:
                 play_pause.setImageResource(R.drawable.pause_32);
@@ -267,6 +304,18 @@ public class MainActivity extends AppCompatActivity  {
                 songname_main.setText(Currsong.getCurrRecentSong().getSongName());
                 singername_main.setText(getSingerNames(Currsong.getCurrRecentSong()));
                 Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrRecentSong().getAlbummid()+".jpg").into(albumimage_main);
+                break;
+            case Constant.STATUS_PLAYINGLOVESONG:
+                play_pause.setImageResource(R.drawable.pause_32);
+                songname_main.setText(Currsong.getCurrLoveSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrLoveSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrLoveSong().getAlbummid()+".jpg").into(albumimage_main);
+                break;
+            case Constant.STATUS_PAUSELOVESONG:
+                play_pause.setImageResource(R.drawable.play_32);
+                songname_main.setText(Currsong.getCurrLoveSong().getSongName());
+                singername_main.setText(getSingerNames(Currsong.getCurrLoveSong()));
+                Glide.with(this).load("http://y.gtimg.cn/music/photo_new/T002R180x180M000"+Currsong.getCurrLoveSong().getAlbummid()+".jpg").into(albumimage_main);
                 break;
         }
     }

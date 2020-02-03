@@ -9,5 +9,8 @@ public class Constant {
     public static final int STATUS_PAUSERECENTSONG=4;
     public static final int STATUS_PREPAREONLINESONG=5;
     public static final int STATUS_PREPARERECENTSONG=6;
+    public static final int STATUS_PLAYINGLOVESONG=7;
+    public static final int STATUS_PAUSELOVESONG=8;
+    public static final int STATUS_PREPARELOVESONG=9;
 
 }

@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -30,6 +31,8 @@ import java.util.TimerTask;
 
 import Util.Constant;
 import Util.Currsong;
+import bean.LoveSong;
+import bean.OnlineSong;
 import bean.RecentSong;
 import bean.SaveSong;
 import butterknife.Bind;
@@ -58,6 +61,9 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
     @Bind(R.id.songname_activityplay)
     TextView songname;
 
+    @Bind(R.id.love)
+    Button love;
+
     @Bind(R.id.singername_activityplay)
     TextView singername;
 
@@ -76,7 +82,6 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         setContentView(R.layout.activity_play);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
-
         Intent intent = new Intent(PlayActivity.this,PlayService.class);
         bindService(intent,connection, Context.BIND_AUTO_CREATE);
 
@@ -85,15 +90,6 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         seekBar.setProgress(PlayService.mp.getCurrentPosition());
         init();
         setOnclick();
-
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
-
-
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -109,17 +105,59 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
 
     public void init(){
         switch(Currsong.getSTATUS()){
+            case Constant.STATUS_PREPAREONLINESONG:
+                songname.setText(Currsong.getCurrOnlineSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrOnlineSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrOnlineSong().getInterval()));
+                play_pause.setImageResource(R.drawable.play_64);
+                break;
             case Constant.STATUS_PLAYINGONLINESONG:
-                songname.setText(Currsong.getCurrSaveSong().getSongName());
-                singername.setText(getSingerNames(Currsong.getCurrSaveSong()));
-                songLength.setText(MinuteAndSecond(Currsong.getCurrSaveSong().getInterval()));
+                songname.setText(Currsong.getCurrOnlineSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrOnlineSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrOnlineSong().getInterval()));
                 play_pause.setImageResource(R.drawable.pause_64);
+                break;
+            case Constant.STATUS_PAUSEONLINESONG:
+                songname.setText(Currsong.getCurrOnlineSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrOnlineSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrOnlineSong().getInterval()));
+                play_pause.setImageResource(R.drawable.play_64);
+                break;
+            case Constant.STATUS_PREPARERECENTSONG:
+                songname.setText(Currsong.getCurrRecentSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrRecentSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrRecentSong().getInterval()));
+                play_pause.setImageResource(R.drawable.play_64);
                 break;
             case Constant.STATUS_PLAYINGRECENTSONG:
                 songname.setText(Currsong.getCurrRecentSong().getSongName());
                 singername.setText(getSingerNames(Currsong.getCurrRecentSong()));
                 songLength.setText(MinuteAndSecond(Currsong.getCurrRecentSong().getInterval()));
                 play_pause.setImageResource(R.drawable.pause_64);
+                break;
+            case Constant.STATUS_PAUSERECENTSONG:
+                songname.setText(Currsong.getCurrLoveSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrLoveSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrLoveSong().getInterval()));
+                play_pause.setImageResource(R.drawable.play_64);
+                break;
+            case Constant.STATUS_PREPARELOVESONG:
+                songname.setText(Currsong.getCurrLoveSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrLoveSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrLoveSong().getInterval()));
+                play_pause.setImageResource(R.drawable.play_64);
+                break;
+            case Constant.STATUS_PLAYINGLOVESONG:
+                songname.setText(Currsong.getCurrLoveSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrLoveSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrLoveSong().getInterval()));
+                play_pause.setImageResource(R.drawable.pause_64);
+                break;
+            case Constant.STATUS_PAUSELOVESONG:
+                songname.setText(Currsong.getCurrLoveSong().getSongName());
+                singername.setText(getSingerNames(Currsong.getCurrLoveSong()));
+                songLength.setText(MinuteAndSecond(Currsong.getCurrLoveSong().getInterval()));
+                play_pause.setImageResource(R.drawable.play_64);
                 break;
         }
         if(Currsong.getSTATUS()!=Constant.NOTPLAYING){
@@ -137,11 +175,11 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         EventBus.getDefault().unregister(this);
     }
 
-    public String getSingerNames(SaveSong ss){
+    public String getSingerNames(OnlineSong os){
         String SingerNames="";
-        for(int i=0;i<ss.getSingers().size();i++){
-            SingerNames+=ss.getSingers().get(i);
-            if(i!=ss.getSingers().size()-1)
+        for(int i=0;i<os.getSingers().size();i++){
+            SingerNames+=os.getSingers().get(i);
+            if(i!=os.getSingers().size()-1)
                 SingerNames+="/";
         }
         return SingerNames;
@@ -152,6 +190,16 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         for(int i=0;i<rs.getSingers().size();i++){
             SingerNames+=rs.getSingers().get(i);
             if(i!=rs.getSingers().size()-1)
+                SingerNames+="/";
+        }
+        return SingerNames;
+    }
+
+    public String getSingerNames(LoveSong ls){
+        String SingerNames="";
+        for(int i=0;i<ls.getSingers().size();i++){
+            SingerNames+=ls.getSingers().get(i);
+            if(i!=ls.getSingers().size()-1)
                 SingerNames+="/";
         }
         return SingerNames;
@@ -191,7 +239,7 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
         seekbarThread=new Thread(new Runnable() {
             @Override
             public void run() {
-                while (Currsong.getSTATUS() == Constant.STATUS_PLAYINGONLINESONG || Currsong.getSTATUS() == Constant.STATUS_PLAYINGRECENTSONG) {
+                while (Currsong.getSTATUS() == Constant.STATUS_PLAYINGONLINESONG || Currsong.getSTATUS() == Constant.STATUS_PLAYINGRECENTSONG||Currsong.getSTATUS()==Constant.STATUS_PLAYINGLOVESONG) {
                     try {
                         Thread.sleep(1000);
                     } catch (Exception e) {
@@ -214,6 +262,26 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
 
 
     public void setOnclick(){
+        //收藏歌曲
+        love.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(Currsong.getSTATUS()==Constant.STATUS_PLAYINGONLINESONG||Currsong.getSTATUS()==Constant.STATUS_PAUSEONLINESONG||Currsong.getSTATUS()==Constant.STATUS_PREPAREONLINESONG){
+                    saveLoveSong(Currsong.getCurrOnlineSong());
+                }
+                if(Currsong.getSTATUS()==Constant.STATUS_PLAYINGRECENTSONG||Currsong.getSTATUS()==Constant.STATUS_PAUSERECENTSONG||Currsong.getSTATUS()==Constant.STATUS_PREPARERECENTSONG){
+                    saveLoveSong(Currsong.getCurrRecentSong());
+                }
+            }
+        });
+
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+
         //进度条的拖动事件
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -247,6 +315,11 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
                         PlayService.mp.pause();
                         Currsong.setSTATUS(Constant.STATUS_PAUSERECENTSONG);
                         break;
+                    case Constant.STATUS_PLAYINGLOVESONG:
+                        play_pause.setImageResource(R.drawable.play_64);
+                        PlayService.mp.pause();
+                        Currsong.setSTATUS(Constant.STATUS_PAUSELOVESONG);
+                        break;
                     case Constant.STATUS_PAUSEONLINESONG:
                         play_pause.setImageResource(R.drawable.pause_64);
                         PlayService.mp.start();
@@ -259,6 +332,12 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
                         Currsong.setSTATUS(Constant.STATUS_PLAYINGRECENTSONG);
                         getProgress();
                         break;
+                    case Constant.STATUS_PAUSELOVESONG:
+                        play_pause.setImageResource(R.drawable.pause_64);
+                        PlayService.mp.start();
+                        Currsong.setSTATUS(Constant.STATUS_PLAYINGLOVESONG);
+                        getProgress();
+                        break;
                 }
             }
         });
@@ -268,21 +347,22 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
             public void onClick(View view) {
                 PlayService.mp.stop();
                 PlayService.mp.reset();
-                List<SaveSong> saveSongList=LitePal.findAll(SaveSong.class);
+                List<OnlineSong> onlineSongList=LitePal.findAll(OnlineSong.class);
                 List<RecentSong> recentSongList=LitePal.findAll(RecentSong.class);
+                List<LoveSong> loveSongList=LitePal.findAll(LoveSong.class);
                 int position;
                 switch (Currsong.getSTATUS()){
                     case Constant.STATUS_PLAYINGONLINESONG:
-                        position=Currsong.getCurrSaveSong().getPosition()-1;
+                        position=Currsong.getCurrOnlineSong().getPosition()-1;
                         if(position<0)
-                            position= saveSongList.size()-1;
-                        playBinder.play(saveSongList.get(position));
+                            position= onlineSongList.size()-1;
+                        playBinder.play(onlineSongList.get(position));
                         break;
                     case Constant.STATUS_PAUSEONLINESONG:
-                        position=Currsong.getCurrSaveSong().getPosition()-1;
+                        position=Currsong.getCurrOnlineSong().getPosition()-1;
                         if(position<0)
-                            position= saveSongList.size()-1;
-                        playBinder.play(saveSongList.get(position));
+                            position= onlineSongList.size()-1;
+                        playBinder.play(onlineSongList.get(position));
                         break;
                     case Constant.STATUS_PLAYINGRECENTSONG:
                         position=Currsong.getCurrRecentSong().getPosition()-1;
@@ -295,6 +375,18 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
                         if(position<0)
                             position= recentSongList.size()-1;
                         playBinder.play(recentSongList.get(position));
+                        break;
+                    case Constant.STATUS_PLAYINGLOVESONG:
+                        position=Currsong.getCurrLoveSong().getPosition()-1;
+                        if(position<0)
+                            position= loveSongList.size()-1;
+                        playBinder.play(loveSongList.get(position));
+                        break;
+                    case Constant.STATUS_PAUSELOVESONG:
+                        position=Currsong.getCurrLoveSong().getPosition()-1;
+                        if(position<0)
+                            position= loveSongList.size()-1;
+                        playBinder.play(loveSongList.get(position));
                         break;
                 }
 
@@ -306,21 +398,22 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
             public void onClick(View view) {
                 PlayService.mp.stop();
                 PlayService.mp.reset();
-                List<SaveSong> saveSongList=LitePal.findAll(SaveSong.class);
+                List<OnlineSong> onlineSongList=LitePal.findAll(OnlineSong.class);
                 List<RecentSong> recentSongList=LitePal.findAll(RecentSong.class);
+                List<LoveSong> loveSongList=LitePal.findAll(LoveSong.class);
                 int position;
                 switch (Currsong.getSTATUS()){
                     case Constant.STATUS_PLAYINGONLINESONG:
-                        position=Currsong.getCurrSaveSong().getPosition()+1;
-                        if(position==saveSongList.size())
+                        position=Currsong.getCurrOnlineSong().getPosition()+1;
+                        if(position==onlineSongList.size())
                             position= 0;
-                        playBinder.play(saveSongList.get(position));
+                        playBinder.play(onlineSongList.get(position));
                         break;
                     case Constant.STATUS_PAUSEONLINESONG:
-                        position=Currsong.getCurrSaveSong().getPosition()+1;
-                        if(position==saveSongList.size())
+                        position=Currsong.getCurrOnlineSong().getPosition()+1;
+                        if(position==onlineSongList.size())
                             position= 0;
-                        playBinder.play(saveSongList.get(position));
+                        playBinder.play(onlineSongList.get(position));
                         break;
                     case Constant.STATUS_PLAYINGRECENTSONG:
                         position=Currsong.getCurrRecentSong().getPosition()+1;
@@ -334,9 +427,71 @@ public class PlayActivity extends AppCompatActivity implements IPlayView{
                             position= 0;
                         playBinder.play(recentSongList.get(position));
                         break;
+                    case Constant.STATUS_PLAYINGLOVESONG:
+                        position=Currsong.getCurrLoveSong().getPosition()+1;
+                        if(position==loveSongList.size())
+                            position= 0;
+                        playBinder.play(loveSongList.get(position));
+                        break;
+                    case Constant.STATUS_PAUSELOVESONG:
+                        position=Currsong.getCurrLoveSong().getPosition()+1;
+                        if(position==loveSongList.size())
+                            position= 0;
+                        playBinder.play(loveSongList.get(position));
+                        break;
                 }
             }
         });
     }
 
+    public void saveLoveSong(OnlineSong os){
+        List<LoveSong> songList=LitePal.findAll(LoveSong.class);
+        LoveSong loveSong=new LoveSong();
+        loveSong.setAlbummid(os.getAlbummid());
+        loveSong.setAlbumName(os.getAlbumName());
+        loveSong.setNeedPay(os.isNeedPay());
+        loveSong.setSingers(os.getSingers());
+        loveSong.setSongName(os.getSongName());
+        loveSong.setUrl(os.getUrl());
+        loveSong.setSongmId(os.getSongmId());
+        loveSong.setInterval(os.getInterval());
+        loveSong.setPlaying("no");
+        if(!AlreadyExist(loveSong)){
+            Log.i("PlayService","song don't exist");
+            loveSong.setPosition(songList.size());
+            loveSong.save();
+        }
+    }
+
+    public void saveLoveSong(RecentSong rs){
+        List<LoveSong> songList=LitePal.findAll(LoveSong.class);
+        LoveSong loveSong=new LoveSong();
+        loveSong.setAlbummid(rs.getAlbummid());
+        loveSong.setAlbumName(rs.getAlbumName());
+        loveSong.setNeedPay(rs.isNeedPay());
+        loveSong.setSingers(rs.getSingers());
+        loveSong.setSongName(rs.getSongName());
+        loveSong.setUrl(rs.getUrl());
+        loveSong.setSongmId(rs.getSongmId());
+        loveSong.setInterval(rs.getInterval());
+        loveSong.setPlaying("no");
+        if(!AlreadyExist(loveSong)){
+            Log.i("PlayService","song don't exist");
+            loveSong.setPosition(songList.size());
+            loveSong.save();
+        }
+    }
+
+    public boolean AlreadyExist(LoveSong lovesong){
+        List<LoveSong> loveSongList=LitePal.findAll(LoveSong.class);
+        if(loveSongList.size()==0)
+            return false;
+        else{
+            for(LoveSong ls:loveSongList) {
+                if (lovesong.getUrl().equals(ls.getUrl()))//用url来判断两首歌是否相同
+                    return true;
+            }
+            return false;
+        }
+    }
 }
